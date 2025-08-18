@@ -5,14 +5,9 @@ import "./Register.css"; // external CSS file
 
 export default function Register() {
   const [form, setForm] = useState({
-    role: "client",
     name: "",
-    clientBusinessName: "",
     email: "",
     password: "",
-    phone: "",
-    address: "",
-    panNumber: "",
   });
 
   const navigate = useNavigate();
@@ -44,53 +39,6 @@ export default function Register() {
         <form onSubmit={handleSubmit}>
           <h2>Register</h2>
 
-          <label>Role:</label>
-          <div className="role-options">
-            <label>
-              <input
-                type="radio"
-                name="role"
-                value="admin"
-                checked={form.role === "admin"}
-                onChange={handleChange}
-              />
-              Admin
-            </label>
-
-            <label>
-              <input
-                type="radio"
-                name="role"
-                value="ca"
-                checked={form.role === "ca"}
-                onChange={handleChange}
-              />
-              CA
-            </label>
-
-            <label>
-              <input
-                type="radio"
-                name="role"
-                value="staff"
-                checked={form.role === "staff"}
-                onChange={handleChange}
-              />
-              Staff
-            </label>
-
-            <label>
-              <input
-                type="radio"
-                name="role"
-                value="client"
-                checked={form.role === "client"}
-                onChange={handleChange}
-              />
-              Client
-            </label>
-          </div>
-
           <input
             type="text"
             name="name"
@@ -99,28 +47,6 @@ export default function Register() {
             onChange={handleChange}
             required
           />
-
-          {form.role === "client" && (
-            <input
-              type="text"
-              name="clientBusinessName"
-              placeholder="Business Name"
-              value={form.clientBusinessName}
-              onChange={handleChange}
-              required
-            />
-          )}
-
-          {form.role !== "client" && (
-            <input
-              type="text"
-              name="panNumber"
-              placeholder="PAN Number"
-              value={form.panNumber}
-              onChange={handleChange}
-              required
-            />
-          )}
 
           <input
             type="email"
@@ -138,23 +64,6 @@ export default function Register() {
             value={form.password}
             onChange={handleChange}
             required
-          />
-
-          <input
-            type="text"
-            name="phone"
-            placeholder="Phone"
-            value={form.phone}
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            type="text"
-            name="address"
-            placeholder="Address"
-            value={form.address}
-            onChange={handleChange}
           />
 
           <button type="submit" className="btn-register">

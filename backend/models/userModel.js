@@ -2,28 +2,27 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
-    role: {
-      type: String,
-      enum: ["admin", "ca", "staff", "client"],
-      required: true,
-    },
-    name: { type: String, required: true }, // sab roles ke liye
-    clientBusinessName: {
-      type: String,
-      required: function () {
-        return this.role === "client";
-      },
-    },
+    name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    phone: { type: String, required: true },
-    address: { type: String },
-    panNumber: {
+
+    // Role: admin or user
+    role: {
       type: String,
-      required: function () {
-        return this.role !== "client"; // Client ke alawa PAN must
-      },
+      enum: ["admin", "user"],
+      default: "user",
     },
+
+    // Services allowed for the user (decided by admin)
+    services: [
+      {
+        type: String,
+        enum: ["FCA", "Tumbledy", "PdfViewer", "Reports", "Tax"],
+      },
+    ],
+
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
   },
   { timestamps: true }
 );

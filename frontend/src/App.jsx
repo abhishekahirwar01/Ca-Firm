@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/authContext";
 import HomePage from "./pages/HomePage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -11,70 +10,73 @@ import Reports from "./services/Reports";
 import Tax from "./services/Tax";
 import PrivateRoute from "./components/PriveteRoute";
 import Layout from "./components/Layout";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+    <BrowserRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-            {/* Dashboard with nested services */}
+          {/* Protected Dashboard & Services */}
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          >
             <Route
-              path="/dashboard"
+              path="services/fca"
               element={
                 <PrivateRoute>
-                  <Dashboard />
+                  <FCA />
                 </PrivateRoute>
               }
-            >
-              <Route
-                path="services/fca"
-                element={
-                  <PrivateRoute roles={["admin", "ca", "staff", "client"]}>
-                    <FCA />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="services/tumbledy"
-                element={
-                  <PrivateRoute roles={["admin", "ca"]}>
-                    <Tumbledy />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="services/pdf-viewer"
-                element={
-                  <PrivateRoute roles={["admin", "ca", "client"]}>
-                    <PDFViewer />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="services/reports"
-                element={
-                  <PrivateRoute roles={["admin", "ca"]}>
-                    <Reports />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="services/tax"
-                element={
-                  <PrivateRoute roles={["admin", "ca", "staff"]}>
-                    <Tax />
-                  </PrivateRoute>
-                }
-              />
-            </Route>
+            />
+            <Route
+              path="services/tumbledy"
+              element={
+                <PrivateRoute>
+                  <Tumbledy />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="services/pdf-viewer"
+              element={
+                <PrivateRoute>
+                  <PDFViewer />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="services/reports"
+              element={
+                <PrivateRoute>
+                  <Reports />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="services/tax"
+              element={
+                <PrivateRoute>
+                  <Tax />
+                </PrivateRoute>
+              }
+            />
           </Route>
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
