@@ -6,20 +6,13 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
 
-    // Role: admin or user
     role: {
       type: String,
       enum: ["admin", "user"],
       default: "user",
     },
 
-    // Services allowed for the user (decided by admin)
-    services: [
-      {
-        type: String,
-        enum: ["FCA", "Tumbledy", "PdfViewer", "Reports", "Tax"],
-      },
-    ],
+    services: [{ type: mongoose.Schema.Types.ObjectId, ref: "Service" }],
 
     resetPasswordToken: String,
     resetPasswordExpire: Date,

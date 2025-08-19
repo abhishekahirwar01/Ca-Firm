@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
 
-// ------------------- Register (Admin Only) -------------------
+
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role, services } = req.body;
@@ -19,7 +19,7 @@ exports.register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role || "user", // default is user
+      role: role || "user", 
       services: services || [],
     });
 

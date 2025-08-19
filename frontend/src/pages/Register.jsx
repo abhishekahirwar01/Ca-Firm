@@ -19,8 +19,9 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await API.post("/auth/register", form);
-      alert("Registration successful, please login!");
+      // role hardcode = admin
+      await API.post("/auth/register", { ...form, role: "admin" });
+      alert("Admin Registration successful, please login!");
       navigate("/login");
     } catch (err) {
       alert(err.response?.data?.message || "Registration failed");
@@ -28,52 +29,71 @@ export default function Register() {
   };
 
   return (
-    <div className="register-container">
-      {/* Left Side Image */}
-      <div className="register-image">
-        <img src="/register-bg.jpg" alt="Register" />
-      </div>
-
-      {/* Right Side Form */}
-      <div className="register-form">
-        <form onSubmit={handleSubmit}>
-          <h2>Register</h2>
-
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            value={form.name}
-            onChange={handleChange}
-            required
+    <div className="container-fluid register-container">
+      <div className="row vh-100">
+        {/* Left Side Image */}
+        <div className="col-md-6 d-none d-md-block p-0 register-image">
+          <img
+            src="/register-bg.jpg"
+            alt="Register"
+            className="img-fluid h-100 w-100"
           />
+        </div>
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
+        {/* Right Side Form */}
+        <div className="col-md-6 d-flex align-items-center justify-content-center bg-light">
+          <div className="card shadow p-4 register-form w-200">
+            <h2 className="text-center mb-4">Admin Register</h2>
+            <form onSubmit={handleSubmit}>
+              <div className="mb-3">
+                <label className="form-label">Full Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  className="form-control"
+                  placeholder="Enter your full name"
+                  value={form.name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
+              <div className="mb-3">
+                <label className="form-label">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  className="form-control"
+                  placeholder="Enter your email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-          <button type="submit" className="btn-register">
-            Register
-          </button>
+              <div className="mb-3">
+                <label className="form-label">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  className="form-control"
+                  placeholder="Enter password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-          <p className="login-link">
-            Already have an account? <Link to="/login">Login</Link>
-          </p>
-        </form>
+              <button type="submit" className="btn btn-primary w-100">
+                Register Admin
+              </button>
+
+              <p className="text-center mt-3">
+                Already have an account? <Link to="/login">Login</Link>
+              </p>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );

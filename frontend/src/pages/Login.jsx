@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../services/api";
-import { auth, provider } from "../firebase"; // Firebase imports
+import { auth, provider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
 import "./Login.css";
 
@@ -9,44 +9,50 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const navigate = useNavigate();
 
-  // Handle email/password input change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Email/password login
+  // Email/Password login
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await API.post("/auth/login", form);
 
-      // Save token & user info in localStorage
+      // Save token & full user object
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("name", res.data.name);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      navigate("/dashboard");
+      // Redirect based on role
+      if (res.data.user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/user/dashboard");
+      }
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     }
   };
 
-  // Firebase Google login
+  // Google login
   const handleGoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Send user info to backend to create/find user & generate JWT
       const res = await API.post("/auth/google-login", {
         name: user.displayName,
         email: user.email,
       });
 
-      // Save token & user info in localStorage
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("name", res.data.name);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      navigate("/dashboard");
+      if (res.data.user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/user/dashboard");
+      }
     } catch (err) {
       alert("Google login failed");
     }
@@ -54,12 +60,10 @@ export default function Login() {
 
   return (
     <div className="login-container">
-      {/* Left side image */}
       <div className="login-image">
         <img src="/register-bg.jpg" alt="Login Cover" />
       </div>
 
-      {/* Right side form */}
       <div className="login-form-wrapper">
         <form onSubmit={handleSubmit} className="login-form">
           <h2>Login</h2>
@@ -85,7 +89,6 @@ export default function Login() {
             Login
           </button>
 
-          {/* Firebase Google login */}
           <button
             type="button"
             className="btn-login btn-google"
@@ -103,7 +106,6 @@ export default function Login() {
             </Link>
           </p>
 
-          {/* Register link */}
           <p className="register-link">
             Don't have an account? <Link to="/register">Register here</Link>
           </p>

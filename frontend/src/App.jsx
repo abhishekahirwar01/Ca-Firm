@@ -1,13 +1,10 @@
+// App.js
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import FCA from "./services/FCA";
-import Tumbledy from "./services/Tumbledy";
-import PDFViewer from "./services/PdfViewer";
-import Reports from "./services/Reports";
-import Tax from "./services/Tax";
+import AdminDashboard from "./pages/AdminDashboard";
+import UserDashboard from "./pages/UserDashboard";
 import PrivateRoute from "./components/PriveteRoute";
 import Layout from "./components/Layout";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -18,63 +15,30 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          {/* Public Routes */}
+          {/* ---------- Public Routes ---------- */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* Protected Dashboard & Services */}
+          {/* ---------- Protected Dashboards ---------- */}
           <Route
-            path="/dashboard"
+            path="/admin/dashboard"
             element={
-              <PrivateRoute>
-                <Dashboard />
+              <PrivateRoute role="admin">
+                <AdminDashboard />
               </PrivateRoute>
             }
-          >
-            <Route
-              path="services/fca"
-              element={
-                <PrivateRoute>
-                  <FCA />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="services/tumbledy"
-              element={
-                <PrivateRoute>
-                  <Tumbledy />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="services/pdf-viewer"
-              element={
-                <PrivateRoute>
-                  <PDFViewer />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="services/reports"
-              element={
-                <PrivateRoute>
-                  <Reports />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="services/tax"
-              element={
-                <PrivateRoute>
-                  <Tax />
-                </PrivateRoute>
-              }
-            />
-          </Route>
+          />
+          <Route
+            path="/user/dashboard"
+            element={
+              <PrivateRoute role="user">
+                <UserDashboard />
+              </PrivateRoute>
+            }
+          />
         </Route>
       </Routes>
     </BrowserRouter>
