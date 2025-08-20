@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
 
-
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role, services } = req.body;
@@ -19,7 +18,7 @@ exports.register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role || "user", 
+      role: role || "user",
       services: services || [],
     });
 
@@ -42,7 +41,6 @@ exports.register = async (req, res) => {
   }
 };
 
-// ------------------- Login -------------------
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -75,7 +73,6 @@ exports.login = async (req, res) => {
   }
 };
 
-// ------------------- Google Login -------------------
 exports.googleLogin = async (req, res) => {
   try {
     const { email, name } = req.body;
@@ -108,7 +105,6 @@ exports.googleLogin = async (req, res) => {
   }
 };
 
-// ------------------- Forgot Password -------------------
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -134,7 +130,6 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// ------------------- Reset Password -------------------
 exports.resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
@@ -160,7 +155,6 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
-// ------------------- Admin: Update User -------------------
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -168,7 +162,7 @@ exports.updateUser = async (req, res) => {
 
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { name, email, role, services },
+      { name, email, role, services }, // services is array of IDs
       { new: true }
     );
 
@@ -181,7 +175,6 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// ------------------- Admin: Delete User -------------------
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -196,12 +189,49 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// ------------------- Admin: Get All Users -------------------
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password");
+    const users = (await User.find().populate("services")) || [];
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getuser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate("services"); 
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json(user.services); 
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.createUser = async (req, res) => {
+  try {
+    const { email, password, services } = req.body;
+
+    if (!email || !password)
+      return res.status(400).json({ message: "Fill all fields" });
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: "User already exists" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      email,
+      password: hashedPassword,
+      services: services || [],
+      role: "user",
+    });
+
+    res.status(201).json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 };

@@ -4,9 +4,7 @@ import "./HomePage.css";
 
 export default function HomePage() {
   const [services, setServices] = useState([]);
-  const [team, setTeam] = useState([]);
 
-  // Dummy Data (later you’ll fetch from backend API)
   useEffect(() => {
     setServices([
       {
@@ -45,72 +43,23 @@ export default function HomePage() {
         link: "/dashboard/services/tax",
       },
     ]);
-
-    setTeam([
-      {
-        id: 1,
-        name: "CA Rajiv Sharma",
-        role: "Founder & Managing Partner",
-        img: "./founder.jpg",
-      },
-      {
-        id: 2,
-        name: "CA Rohit Verma",
-        role: "Associate Partner",
-        img: "./partner1.jpg",
-      },
-      {
-        id: 3,
-        name: "CA Rohit Mehra",
-        role: "Senior Partner",
-        img: "./partner2.jpg",
-      },
-    ]);
   }, []);
 
   return (
     <div>
       {/* Services Section */}
-      <section className="services py-5" id="services">
+      <section className="services" id="services">
         <div className="container">
-          <h2 className="mb-4">Our Modules</h2>
-          <div className="row">
+          <h2 className="section-title">Our Softwares</h2>
+          <div className="card-grid">
             {services.map((srv) => (
-              <div key={srv.id} className="col-md-4 mb-4">
-                <div className="card h-100">
-                  <img src={srv.img} className="card-img-top" alt={srv.title} />
-                  <div className="card-body">
-                    <h5 className="card-title">{srv.title}</h5>
-                    <p className="card-text">{srv.desc}</p>
-                    <a href="/login" className="btn btn-primary">
-                      Login to Access
-                    </a>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section className="team py-5" id="team">
-        <div className="container">
-          <h2 className="mb-4">Meet Our Team</h2>
-          <div className="row">
-            {team.map((member) => (
-              <div key={member.id} className="col-md-4 mb-4">
-                <div className="card h-100 text-center">
-                  <img
-                    src={member.img}
-                    className="card-img-top"
-                    alt={member.name}
-                  />
-                  <div className="card-body">
-                    <h5 className="card-title">{member.name}</h5>
-                    <p className="card-text">{member.role}</p>
-                  </div>
-                </div>
+              <div key={srv.id} className="card">
+                <img src={srv.img} alt={srv.title} />
+                <h5 className="card-title">{srv.title}</h5>
+                <p className="card-text">{srv.desc}</p>
+                <Link to="/login" className="btn login-btn">
+                  Login to Access
+                </Link>
               </div>
             ))}
           </div>

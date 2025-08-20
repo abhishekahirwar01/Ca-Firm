@@ -19,11 +19,9 @@ export default function Login() {
     try {
       const res = await API.post("/auth/login", form);
 
-      // Save token & full user object
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      // Redirect based on role
       if (res.data.user.role === "admin") {
         navigate("/admin/dashboard");
       } else {
@@ -62,52 +60,57 @@ export default function Login() {
     <div className="login-container">
       <div className="login-image">
         <img src="/register-bg.jpg" alt="Login Cover" />
+        <div className="overlay">
+          <h1>Welcome Back!</h1>
+          <p>Access your account and manage everything in one place.</p>
+        </div>
       </div>
 
       <div className="login-form-wrapper">
         <form onSubmit={handleSubmit} className="login-form">
-          <h2>Login</h2>
+          <h2>Sign In</h2>
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
+          <div className="input-group">
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          <button type="submit" className="btn-login">
+          <div className="input-group">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <button type="submit" className="btn-login primary">
             Login
           </button>
 
           <button
             type="button"
-            className="btn-login btn-google"
+            className="btn-login google"
             onClick={handleGoogleLogin}
           >
+            <img src="/googleicon.png" alt="Google" />
             Continue with Google
           </button>
 
-          <p>
-            <Link
-              to="/forgot-password"
-              style={{ textDecoration: "underline", color: "blue" }}
-            >
-              Forgot Password?
-            </Link>
+          <p className="forgot-link">
+            <Link to="/forgot-password">Forgot Password?</Link>
           </p>
 
           <p className="register-link">
-            Don't have an account? <Link to="/register">Register here</Link>
+            Don’t have an account? <Link to="/register">Register here</Link>
           </p>
         </form>
       </div>

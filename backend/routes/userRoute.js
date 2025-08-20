@@ -1,8 +1,10 @@
 const express = require("express");
 const {
   getAllUsers,
+  createUser,
   updateUser,
   deleteUser,
+  getuser,
 } = require("../controllers/authController");
 const {
   authMiddleware,
@@ -11,9 +13,10 @@ const {
 
 const router = express.Router();
 
-// Admin only
 router.get("/", authMiddleware, adminMiddleware, getAllUsers);
+router.post("/", authMiddleware, adminMiddleware, createUser);
 router.put("/:id", authMiddleware, adminMiddleware, updateUser);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteUser);
+router.get("/my-services", authMiddleware, getuser);
 
 module.exports = router;
