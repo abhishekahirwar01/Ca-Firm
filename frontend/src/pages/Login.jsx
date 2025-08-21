@@ -1,23 +1,25 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import API from "../services/api";
-import { auth, provider } from "../firebase";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FiMail, FiLock } from "react-icons/fi";
+import { motion } from "framer-motion";
+import API from "../services/api"; // your API instance
+import { auth, provider } from "../firebase"; // Firebase config
 import { signInWithPopup } from "firebase/auth";
-import "./Login.css";
+import "./Login.css"; // External CSS
 
 export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   // Email/Password login
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await API.post("/auth/login", form);
+      const res = await API.post("/auth/login", formData);
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -58,62 +60,71 @@ export default function Login() {
 
   return (
     <div className="login-container">
-      <div className="login-image">
-        <img src="/register-bg.jpg" alt="Login Cover" />
-        <div className="overlay">
-          <h1>Welcome Back!</h1>
-          <p>Access your account and manage everything in one place.</p>
-        </div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="login-card"
+      >
+        <h1 className="login-title">Login</h1>
 
-      <div className="login-form-wrapper">
         <form onSubmit={handleSubmit} className="login-form">
-          <h2>Sign In</h2>
-
           <div className="input-group">
+            <FiMail className="input-icon" />
             <input
               type="email"
-              name="email"
-              placeholder="Email Address"
-              value={form.email}
+              id="email"
+              placeholder="Email"
+              value={formData.email}
               onChange={handleChange}
               required
             />
           </div>
 
           <div className="input-group">
+            <FiLock className="input-icon" />
             <input
               type="password"
-              name="password"
+              id="password"
               placeholder="Password"
-              value={form.password}
+              value={formData.password}
               onChange={handleChange}
               required
             />
           </div>
 
-          <button type="submit" className="btn-login primary">
-            Login
-          </button>
-
-          <button
-            type="button"
-            className="btn-login google"
-            onClick={handleGoogleLogin}
-          >
-            <img src="/googleicon.png" alt="Google" />
-            Continue with Google
-          </button>
-
-          <p className="forgot-link">
+          <div className="forgot-password">
             <Link to="/forgot-password">Forgot Password?</Link>
-          </p>
+          </div>
 
-          <p className="register-link">
-            Don’t have an account? <Link to="/register">Register here</Link>
-          </p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            type="submit"
+            className="login-btn"
+          >
+            Sign In
+          </motion.button>
+
+          <motion.button
+            type="button"
+            onClick={handleGoogleLogin}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="google-btn"
+          >
+            <img src="./googleicon.png" alt="Google" className="google-icon" />
+            Continue with Google
+          </motion.button>
         </form>
-      </div>
+
+        <div className="login-footer">
+          <p>Don’t have an account?</p>
+          <Link to="/register" className="login-link">
+            Sign Up
+          </Link>
+        </div>
+      </motion.div>
     </div>
   );
 }

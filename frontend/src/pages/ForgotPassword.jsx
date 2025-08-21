@@ -1,7 +1,9 @@
 import { useState } from "react";
-import API from "../services/api";
 import { Link } from "react-router-dom";
-import "./Login.css"; 
+import { FiMail } from "react-icons/fi";
+import { motion } from "framer-motion";
+import API from "../services/api";
+import "./Login.css"; // Use the same CSS as Login/Google login
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -19,30 +21,51 @@ export default function ForgotPassword() {
 
   return (
     <div className="login-container">
-      <div className="login-image">
-        <img src="/register-bg.jpg" alt="Forgot Password" />
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="login-card"
+      >
+        <h1 className="login-title">Forgot Password</h1>
 
-      <div className="login-form-wrapper">
         <form onSubmit={handleSubmit} className="login-form">
-          <h2>Forgot Password</h2>
-          <input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <button type="submit" className="btn-login">
-            Send Reset Link
-          </button>
-          {message && <p style={{ marginTop: "10px" }}>{message}</p>}
+          <div className="input-group">
+            <FiMail className="input-icon" />
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-          <p className="register-link">
-            Remembered? <Link to="/login">Login here</Link>
-          </p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            type="submit"
+            className="login-btn"
+          >
+            Send Reset Link
+          </motion.button>
+
+          {message && (
+            <p style={{ marginTop: "10px", color: "#2563eb", fontWeight: 500 }}>
+              {message}
+            </p>
+          )}
+
+          <div className="login-footer">
+            <p>
+              Remembered your password?{" "}
+              <Link to="/login" className="login-link">
+                Login here
+              </Link>
+            </p>
+          </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }

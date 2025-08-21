@@ -1,6 +1,11 @@
-body {
+/* ===== Global ===== */
+* {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+}
+
+body {
   font-family: "Segoe UI", Arial, sans-serif;
   background: #f6f8fb;
   color: #222;
@@ -10,25 +15,90 @@ body {
   width: 90%;
   max-width: 1200px;
   margin: 0 auto;
-  text-align: center;
 }
 
-/* ===== Services Section with Background Image ===== */
-.services {
-  background: url("./bgimage.jpg") no-repeat center center/cover;
-  padding: 60px 0;
+/* ===== Hero Section ===== */
+.hero.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 60px 20px;
+  background-color: #f8f9fa;
+}
+
+/* Left content */
+.hero .left {
+  flex: 1 1 50%;
+  max-width: 500px;
+  text-align: left;
+  padding: 20px;
+}
+
+.hero .left h1 {
+  font-size: 48px;
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.hero .left p {
+  font-size: 18px;
+  color: #34495e;
+  margin-bottom: 25px;
+}
+
+.hero .left button {
+  background-color: #2980b9;
+  color: #fff;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.hero .left button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+/* Right image */
+.hero .right {
+  flex: 1 1 50%;
+  min-height: 50vh;
   position: relative;
+  background-image: url("/bg.png"); /* only bg.png */
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  border-radius: 10px;
+}
+
+/* Overlay splash.png */
+.hero .right::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/splash.png");
+  background-position: center;
+  background-size: cover;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  border-radius: 10px;
+}
+
+/* ===== Services Section ===== */
+.services {
+  position: relative;
+  padding: 60px 20px;
+  background: url("/bgimage.jpg") no-repeat center center/cover;
   z-index: 1;
 }
 
-/* Optional dark overlay for readability */
 .services::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: rgba(10, 10, 10, 0.45);
   z-index: -1;
 }
@@ -37,18 +107,18 @@ body {
   font-size: 2rem;
   font-weight: 600;
   margin-bottom: 35px;
-  color: #fff; 
+  color: #fff;
 }
 
-/* ===== Grid ===== */
+/* ===== Cards Grid ===== */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 20px;
   justify-items: center;
+  align-items: stretch;
 }
 
-/* ===== Card ===== */
 .card {
   background: #fff;
   border-radius: 12px;
@@ -56,13 +126,11 @@ body {
   padding: 20px;
   width: 100%;
   max-width: 320px;
-  min-width: 260px; 
-  min-height: 340px;
-  text-align: center;
-  transition: transform 0.2s, box-shadow 0.2s;
+  min-width: 260px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .card:hover {
@@ -87,22 +155,20 @@ body {
 
 .card-text {
   font-size: 0.95rem;
-  margin-bottom: 16px;
   color: #444;
+  margin-bottom: 16px;
   flex-grow: 1;
 }
 
-/* ===== Button ===== */
 .btn {
   display: inline-block;
   padding: 10px 20px;
-  background: #007bff;
+  background: #2980b9;
   color: #fff;
   text-decoration: none;
   border-radius: 6px;
   font-weight: 500;
   transition: background 0.3s, transform 0.2s;
-  margin-top: 10px;
   font-size: 14px;
 }
 
@@ -111,41 +177,48 @@ body {
   transform: scale(1.05);
 }
 
-/* ===== Responsive Tweaks ===== */
+/* ===== Responsive ===== */
 @media (max-width: 1024px) {
-  .section-title {
-    font-size: 1.8rem;
+  .hero .left h1 {
+    font-size: 42px;
   }
-  .card {
-    max-width: 280px;
-    min-height: 320px;
+  .hero .left p {
+    font-size: 16px;
   }
 }
 
 @media (max-width: 768px) {
-  .section-title {
-    font-size: 1.6rem;
+  .hero.container {
+    flex-direction: column-reverse; /* Stack vertically */
+    text-align: center;
   }
-  .card {
-    max-width: 260px;
-    min-height: 300px;
+  .hero .left {
+    text-align: center;
+    padding: 10px 0;
+  }
+  .hero .right {
+    width: 100%;
+    min-height: 40vh;
   }
 }
 
 @media (max-width: 480px) {
-  .section-title {
-    font-size: 1.4rem;
+  .hero .left h1 {
+    font-size: 32px;
   }
-  .card {
-    width: 100%;
-    max-width: 100%;
-    min-width: 250px;
-    min-height: 280px; 
+  .hero .left p {
+    font-size: 14px;
+  }
+  .hero .left button {
+    font-size: 14px;
+    padding: 8px 18px;
+  }
+  .card-grid {
+    grid-template-columns: 1fr;
   }
   .btn {
     width: 100%;
-    text-align: center;
     padding: 12px 0;
-    font-size: 1rem;
+    font-size: 16px;
   }
 }

@@ -11,35 +11,35 @@ export default function HomePage() {
         id: 1,
         title: "FCA",
         desc: "Automate tax filings, compliance tracking, and regulatory processes.",
-        img: "./fca.jpg",
+        img: "/fca.jpg",
         link: "/dashboard/services/fca",
       },
       {
         id: 2,
         title: "Tumbledy",
         desc: "Securely store, organize, and manage all your important documents.",
-        img: "./tumbledy.webp",
+        img: "/tumbledy.webp",
         link: "/dashboard/services/tumbledy",
       },
       {
         id: 3,
         title: "PDF Viewer",
         desc: "Upload, preview, and review PDF documents seamlessly.",
-        img: "./pdf.png",
+        img: "/pdf.png",
         link: "/dashboard/services/pdf-viewer",
       },
       {
         id: 4,
         title: "Reports & Analytics",
         desc: "Visualize financial data with charts, KPIs, and custom reports.",
-        img: "./report.jpg",
+        img: "/report.jpg",
         link: "/dashboard/services/reports",
       },
       {
         id: 5,
         title: "Task Management",
         desc: "Assign, track, and complete tasks efficiently with our tools.",
-        img: "./task.jpg",
+        img: "/task.jpg",
         link: "/dashboard/services/tax",
       },
     ]);
@@ -47,6 +47,18 @@ export default function HomePage() {
 
   return (
     <div>
+      {/* Hero Section */}
+      <section className="hero">
+        <div className="container hero">
+          <div className="left">
+            <h1>Welcome to Sharda Associates</h1>
+            <p>Professional CA services in Indore.</p>
+            <button>Learn More</button>
+          </div>
+          <div className="right"></div>
+        </div>
+      </section>
+
       {/* Services Section */}
       <section className="services" id="services">
         <div className="container">

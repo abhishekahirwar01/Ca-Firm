@@ -1,25 +1,26 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FiMail, FiLock, FiUser } from "react-icons/fi";
+import { motion } from "framer-motion";
 import API from "../services/api";
-import "./Register.css";
+import "./Register.css"; // external CSS
 
 export default function Register() {
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
-
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await API.post("/auth/register", { ...form, role: "admin" });
+      await API.post("/auth/register", { ...formData, role: "admin" });
       alert("✅ Admin Registration successful, please login!");
       navigate("/login");
     } catch (err) {
@@ -29,66 +30,70 @@ export default function Register() {
 
   return (
     <div className="register-container">
-      {/* Left side image + overlay */}
-      <div className="register-image">
-        <img src="/register-bg.jpg" alt="Register" />
-        <div className="overlay">
-          <h1>Join Us Today</h1>
-          <p>Secure and powerful admin dashboard access awaits you.</p>
+      <motion.div
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="register-card"
+      >
+        <h1 className="register-title">Admin Register</h1>
+
+        <form onSubmit={handleSubmit} className="register-form">
+          <div className="input-group">
+            <FiUser className="input-icon" />
+            <input
+              type="text"
+              id="name"
+              placeholder="Full Name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="input-group">
+            <FiMail className="input-icon" />
+            <input
+              type="email"
+              id="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="input-group">
+            <FiLock className="input-icon" />
+            <input
+              type="password"
+              id="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            type="submit"
+            className="register-btn"
+          >
+            Sign Up
+          </motion.button>
+        </form>
+
+        <div className="register-footer">
+          <p>
+            Already have an account?{" "}
+            <Link to="/login" className="register-link">
+              Sign In
+            </Link>
+          </p>
         </div>
-      </div>
-
-      {/* Right side form */}
-      <div className="register-form-wrapper">
-        <div className="register-card">
-          <h2>Admin Register</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Full Name</label>
-              <input
-                type="text"
-                name="name"
-                placeholder="Enter your full name"
-                value={form.name}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Email</label>
-              <input
-                type="email"
-                name="email"
-                placeholder="Enter your email"
-                value={form.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Password</label>
-              <input
-                type="password"
-                name="password"
-                placeholder="Enter password"
-                value={form.password}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <button type="submit" className="btn-register">
-              Register Admin
-            </button>
-
-            <p className="login-link">
-              Already have an account? <Link to="/login">Login</Link>
-            </p>
-          </form>
-        </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
