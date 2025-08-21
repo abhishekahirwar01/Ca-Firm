@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema(
     },
 
     services: [{ type: mongoose.Schema.Types.ObjectId, ref: "Service" }],
+    department: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
 
     resetPasswordToken: String,
     resetPasswordExpire: Date,

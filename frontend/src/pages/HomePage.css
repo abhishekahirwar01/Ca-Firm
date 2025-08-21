@@ -6,7 +6,7 @@
 }
 
 body {
-  font-family: "Segoe UI", Arial, sans-serif;
+  /* font-family: "Segoe UI", Arial, sans-serif; */
   background: #f6f8fb;
   color: #222;
 }
@@ -59,7 +59,7 @@ body {
 .right {
   flex: 1;
   min-height: 50vh;
-  background-image: url("/bg.jpg");
+  background-image: url("/bg2.webp");
   background-size: cover;
   background-position: center;
   position: relative;

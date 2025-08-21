@@ -1,12 +1,14 @@
 const User = require("../models/userModel");
+const Department = require("../models/departmentModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
 
+// Register (public)
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role, services } = req.body;
+    const { name, email, password, role, services, department } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser)
@@ -20,9 +22,17 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       role: role || "user",
       services: services || [],
+      department: department || null,
     });
 
     await newUser.save();
+
+    // assign department if provided
+    if (department) {
+      await Department.findByIdAndUpdate(department, {
+        $push: { users: newUser._id },
+      });
+    }
 
     res.status(201).json({
       message: "User created successfully",
@@ -32,6 +42,7 @@ exports.register = async (req, res) => {
         email: newUser.email,
         role: newUser.role,
         services: newUser.services,
+        department: newUser.department,
       },
     });
   } catch (err) {
@@ -41,11 +52,12 @@ exports.register = async (req, res) => {
   }
 };
 
+// Login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate("services department");
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -66,6 +78,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
         services: user.services,
+        department: user.department,
       },
     });
   } catch (err) {
@@ -73,6 +86,7 @@ exports.login = async (req, res) => {
   }
 };
 
+// Google Login
 exports.googleLogin = async (req, res) => {
   try {
     const { email, name } = req.body;
@@ -92,19 +106,14 @@ exports.googleLogin = async (req, res) => {
 
     res.json({
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        services: user.services,
-      },
+      user,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
+// Forgot Password
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -130,6 +139,7 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
+// Reset Password
 exports.resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
@@ -155,19 +165,72 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+// Admin: Create User
+exports.createUser = async (req, res) => {
+  try {
+    const { name, email, password, role, services, department } = req.body;
+
+    if (!email || !password || !name) {
+      return res.status(400).json({ message: "Fill all fields" });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      services: services || [],
+      role: role || "user",
+      department: department || null,
+    });
+
+    if (department) {
+      await Department.findByIdAndUpdate(department, {
+        $push: { users: user._id },
+      });
+    }
+
+    res.status(201).json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Admin: Update User
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, role, services } = req.body;
+    const { name, email, role, services, department } = req.body;
+
+    const oldUser = await User.findById(id);
+    if (!oldUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // handle department change
+    if (department && oldUser.department?.toString() !== department) {
+      if (oldUser.department) {
+        await Department.findByIdAndUpdate(oldUser.department, {
+          $pull: { users: oldUser._id },
+        });
+      }
+      await Department.findByIdAndUpdate(department, {
+        $addToSet: { users: oldUser._id },
+      });
+    }
 
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { name, email, role, services }, // services is array of IDs
+      { name, email, role, services, department },
       { new: true }
-    );
-
-    if (!updatedUser)
-      return res.status(404).json({ message: "User not found" });
+    ).populate("department services");
 
     res.json({ message: "User updated", user: updatedUser });
   } catch (err) {
@@ -175,13 +238,21 @@ exports.updateUser = async (req, res) => {
   }
 };
 
+// Admin: Delete User
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedUser = await User.findByIdAndDelete(id);
 
+    const deletedUser = await User.findByIdAndDelete(id);
     if (!deletedUser)
       return res.status(404).json({ message: "User not found" });
+
+    // remove user from department if assigned
+    if (deletedUser.department) {
+      await Department.findByIdAndUpdate(deletedUser.department, {
+        $pull: { users: deletedUser._id },
+      });
+    }
 
     res.json({ message: "User deleted" });
   } catch (err) {
@@ -189,49 +260,26 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
+// Admin: Get All Users
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = (await User.find().populate("services")) || [];
+    const users = await User.find().populate("services").populate("department");
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-exports.getuser = async (req, res) => {
+// User: Get My Services
+exports.getMyServices = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate("services"); 
+    const user = await User.findById(req.user.id).populate("services");
+
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.json(user.services); 
+    // ✅ return only the array of services
+    res.json(user.services || []);
   } catch (err) {
     res.status(500).json({ message: err.message });
-  }
-};
-
-exports.createUser = async (req, res) => {
-  try {
-    const { email, password, services } = req.body;
-
-    if (!email || !password)
-      return res.status(400).json({ message: "Fill all fields" });
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await User.create({
-      email,
-      password: hashedPassword,
-      services: services || [],
-      role: "user",
-    });
-
-    res.status(201).json(user);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
   }
 };

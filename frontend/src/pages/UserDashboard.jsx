@@ -11,7 +11,7 @@ export default function UserDashboard() {
   const loadServices = async () => {
     try {
       const res = await API.get("/users/my-services");
-      setServices(res.data);
+      setServices(res.data.services || []); 
     } catch (err) {
       console.error(err);
       alert("Failed to load services");
@@ -21,6 +21,7 @@ export default function UserDashboard() {
   return (
     <div style={{ padding: "20px" }}>
       <h4>Your Assigned Services</h4>
+
       {services.length === 0 ? (
         <p>No services assigned yet.</p>
       ) : (
