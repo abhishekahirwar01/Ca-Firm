@@ -18,75 +18,65 @@ body {
 }
 
 /* ===== Hero Section ===== */
-.hero.container {
+.hero {
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  padding: 60px 20px;
-  background-color: #f8f9fa;
+  padding: 60px 0;
 }
 
-/* Left content */
-.hero .left {
-  flex: 1 1 50%;
+.left {
+  flex: 1;
   max-width: 500px;
-  text-align: left;
-  padding: 20px;
 }
 
-.hero .left h1 {
+.left h1 {
   font-size: 48px;
-  color: #2c3e50;
+  color: #5e35b1; /* Sharda Associates color */
   margin-bottom: 20px;
 }
 
-.hero .left p {
+.left p {
   font-size: 18px;
-  color: #34495e;
   margin-bottom: 25px;
 }
 
-.hero .left button {
-  background-color: #2980b9;
+.left button {
+  background-color: #5e35b1;
   color: #fff;
-  padding: 12px 30px;
+  padding: 12px 25px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
+  transition: 0.3s;
 }
 
-.hero .left button:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
+.left button:hover {
+  background-color: #7e57c2;
 }
 
-/* Right image */
-.hero .right {
-  flex: 1 1 50%;
+/* Right Section */
+.right {
+  flex: 1;
   min-height: 50vh;
-  position: relative;
-  background-image: url("/bg.png"); /* only bg.png */
-  background-repeat: no-repeat;
+  background-image: url("/bg.jpg");
   background-size: cover;
   background-position: center;
-  border-radius: 10px;
+  position: relative;
+  border-radius: 20px;
 }
 
-/* Overlay splash.png */
-.hero .right::before {
+.right::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url("/splash.png");
-  background-position: center;
+  background-image: url("/splash.jpg");
   background-size: cover;
+  background-position: center;
   mix-blend-mode: screen;
   pointer-events: none;
-  border-radius: 10px;
+  border-radius: 20px;
 }
-
 /* ===== Services Section ===== */
 .services {
   position: relative;

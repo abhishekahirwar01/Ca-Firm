@@ -18,7 +18,7 @@ export default function Header() {
   };
 
   useEffect(() => {
-    document.title = "Sharda Associates | Real Estate";
+    document.title = "Sharda Associates";
   }, []);
 
   useEffect(() => {

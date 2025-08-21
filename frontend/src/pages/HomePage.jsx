@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./HomePage.css";
 
 export default function HomePage() {
   const [services, setServices] = useState([]);
 
+  const navigate = useNavigate();
   useEffect(() => {
     setServices([
       {
@@ -48,16 +49,17 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="hero">
-        <div className="container hero">
-          <div className="left">
-            <h1>Welcome to Sharda Associates</h1>
-            <p>Professional CA services in Indore.</p>
-            <button>Learn More</button>
-          </div>
-          <div className="right"></div>
+
+      <div className="hero container">
+        <div className="left">
+          <h1>
+            Welcome to <span>Sharda</span> <span>Associates</span>
+          </h1>
+          <p>Professional CA services in Bhopal.</p>
+          <button onClick={() => navigate("/login")}>Sign In</button>
         </div>
-      </section>
+        <div className="right"></div>
+      </div>
 
       {/* Services Section */}
       <section className="services" id="services">
