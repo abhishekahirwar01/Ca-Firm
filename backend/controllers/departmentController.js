@@ -2,15 +2,18 @@ const Department = require("../models/departmentModel");
 const User = require("../models/userModel");
 const Service = require("../models/serviceModel");
 
-// 👉 Create Department
+// 👉 Create Department (Admin only)
 exports.createDepartment = async (req, res) => {
   try {
     const { name, services = [], users = [] } = req.body;
 
+    if (!name)
+      return res.status(400).json({ error: "Department name is required" });
+
     const department = new Department({ name, services, users });
     await department.save();
 
-    // Update Users with department
+    // Assign department to selected users
     if (users.length > 0) {
       await User.updateMany(
         { _id: { $in: users } },
@@ -18,7 +21,7 @@ exports.createDepartment = async (req, res) => {
       );
     }
 
-    res.status(201).json(department);
+    res.status(201).json({ message: "Department created", department });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -29,7 +32,7 @@ exports.getDepartments = async (req, res) => {
   try {
     const departments = await Department.find()
       .populate("services", "name")
-      .populate("users", "name email");
+      .populate("users", "name email role");
 
     res.json(departments);
   } catch (error) {
@@ -47,16 +50,17 @@ exports.updateDepartment = async (req, res) => {
     if (!department)
       return res.status(404).json({ error: "Department not found" });
 
+    // Update name and services
     department.name = name || department.name;
     department.services = services;
 
-    // Remove old users
+    // Remove department from old users
     await User.updateMany(
       { department: department._id },
       { $unset: { department: "" } }
     );
 
-    // Add new users
+    // Assign department to new users
     if (users.length > 0) {
       await User.updateMany(
         { _id: { $in: users } },
@@ -67,7 +71,7 @@ exports.updateDepartment = async (req, res) => {
     department.users = users;
     await department.save();
 
-    res.json(department);
+    res.json({ message: "Department updated", department });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -77,14 +81,15 @@ exports.updateDepartment = async (req, res) => {
 exports.deleteDepartment = async (req, res) => {
   try {
     const { id } = req.params;
+
     const department = await Department.findByIdAndDelete(id);
     if (!department)
       return res.status(404).json({ error: "Department not found" });
 
-    // Remove department from users
+    // Remove department from all users
     await User.updateMany({ department: id }, { $unset: { department: "" } });
 
-    res.json({ message: "Department deleted" });
+    res.json({ message: "Department deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
