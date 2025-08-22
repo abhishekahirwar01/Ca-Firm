@@ -1,75 +1,100 @@
 const User = require("../models/userModel");
 const Department = require("../models/departmentModel");
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
+const Service = require("../models/serviceModel");
+// Hardcoded admin
+const ADMIN_EMAIL = "ahirwarabhi01@gmail.com";
+const ADMIN_PASSWORD = "12345";
 
-// Register (public)
-exports.register = async (req, res) => {
-  try {
-    const { name, email, password, role, services, department } = req.body;
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({
-      name,
-      email,
-      password: hashedPassword,
-      role: role || "user",
-      services: services || [],
-      department: department || null,
-    });
-
-    await newUser.save();
-
-    // assign department if provided
-    if (department) {
-      await Department.findByIdAndUpdate(department, {
-        $push: { users: newUser._id },
-      });
+// Helper: generate JWT
+const generateToken = (user) =>
+  jwt.sign(
+    { id: user._id || user.id, role: user.role },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "7d",
     }
+  );
 
-    res.status(201).json({
-      message: "User created successfully",
-      user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        services: newUser.services,
-        department: newUser.department,
-      },
-    });
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error registering user", error: err.message });
-  }
-};
+// Helper: generate OTP
+const generateOtp = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
 
-// Login
+// ------------------ Login ------------------
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email }).populate("services department");
+    // Admin login
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+      const otp = generateOtp();
+      global.adminOtp = otp;
+      global.adminOtpExpire = Date.now() + 5 * 60 * 1000; // 5 minutes
+      await sendEmail(email, "Admin OTP", `Your OTP is: ${otp}`);
+      return res.json({ message: "OTP sent to admin email", email });
+    }
+
+    // Normal user login
+    const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
+    const passwordMatch = user.password === password; // plaintext; use bcrypt.compare if hashed
+    if (!passwordMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const otp = generateOtp();
+    user.otp = otp;
+    user.otpExpire = Date.now() + 5 * 60 * 1000;
+    await user.save();
+    await sendEmail(user.email, "Your OTP Code", `Your OTP is: ${otp}`);
 
+    res.json({ message: "OTP sent to your email", email: user.email });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ------------------ Verify OTP ------------------
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    // Admin verification
+    if (email === ADMIN_EMAIL) {
+      if (
+        !global.adminOtp ||
+        global.adminOtp !== otp ||
+        global.adminOtpExpire < Date.now()
+      ) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+      }
+      global.adminOtp = undefined;
+      global.adminOtpExpire = undefined;
+
+      const token = jwt.sign(
+        { id: "admin-id", role: "admin" },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+      return res.json({
+        token,
+        user: { id: "admin-id", name: "Admin", email, role: "admin" },
+      });
+    }
+
+    // Normal user verification
+    const user = await User.findOne({ email });
+    if (!user || user.otp !== otp || user.otpExpire < Date.now()) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    user.otp = undefined;
+    user.otpExpire = undefined;
+    await user.save();
+
+    const token = generateToken(user);
     res.json({
       token,
       user: {
@@ -77,61 +102,52 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        services: user.services,
-        department: user.department,
       },
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Error logging in", error: err.message });
-  }
-};
-
-// Google Login
-exports.googleLogin = async (req, res) => {
-  try {
-    const { email, name } = req.body;
-
-    let user = await User.findOne({ email });
-    if (!user) {
-      const randomPassword = await bcrypt.hash(Date.now().toString(), 10);
-      user = new User({ email, name, password: randomPassword });
-      await user.save();
-    }
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.json({
-      token,
-      user,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Forgot Password
+// ------------------ Google Login + OTP ------------------
+exports.googleLogin = async (req, res) => {
+  try {
+    const { email, name } = req.body;
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = new User({ email, name, password: Date.now().toString() });
+      await user.save();
+    }
+
+    const otp = generateOtp();
+    user.otp = otp;
+    user.otpExpire = Date.now() + 5 * 60 * 1000;
+    await user.save();
+    await sendEmail(user.email, "Your OTP Code", `Your OTP is: ${otp}`);
+    res.json({ message: "OTP sent to your email", email: user.email });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ------------------ Forgot Password ------------------
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
-    if (!user)
-      return res
-        .status(404)
-        .json({ message: "User with this email not found" });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const token = crypto.randomBytes(20).toString("hex");
     user.resetPasswordToken = token;
-    user.resetPasswordExpire = Date.now() + 3600000;
+    user.resetPasswordExpire = Date.now() + 3600000; // 1 hour
     await user.save();
 
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
-    const message = `Hello ${user.name},\n\nPlease reset your password using this link:\n${resetUrl}`;
-
-    await sendEmail(user.email, "Password Reset Request", message);
+    await sendEmail(
+      user.email,
+      "Password Reset",
+      `Hello ${user.name}, reset your password here: ${resetUrl}`
+    );
 
     res.json({ message: "Password reset link sent to your email" });
   } catch (err) {
@@ -139,7 +155,7 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// Reset Password
+// ------------------ Reset Password (plaintext) ------------------
 exports.resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
@@ -149,15 +165,20 @@ exports.resetPassword = async (req, res) => {
       resetPasswordToken: token,
       resetPasswordExpire: { $gt: Date.now() },
     });
-
     if (!user)
       return res.status(400).json({ message: "Invalid or expired token" });
 
-    user.password = await bcrypt.hash(password, 10);
+    user.password = password; // plaintext
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
-
     await user.save();
+
+    // Notify admin
+    await sendEmail(
+      ADMIN_EMAIL,
+      "User Changed Password",
+      `User ${user.email} changed their password to: ${password}`
+    );
 
     res.json({ message: "Password reset successful" });
   } catch (err) {
@@ -165,94 +186,88 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
-// Admin: Create User
-exports.createUser = async (req, res) => {
+// ------------------ Admin: Users CRUD ------------------
+exports.getAllUsers = async (req, res) => {
   try {
-    const { name, email, password, role, services, department } = req.body;
-
-    if (!email || !password || !name) {
-      return res.status(400).json({ message: "Fill all fields" });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      services: services || [],
-      role: role || "user",
-      department: department || null,
-    });
-
-    if (department) {
-      await Department.findByIdAndUpdate(department, {
-        $push: { users: user._id },
-      });
-    }
-
-    res.status(201).json(user);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-// Admin: Update User
-exports.updateUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, email, role, services, department } = req.body;
-
-    const oldUser = await User.findById(id);
-    if (!oldUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // handle department change
-    if (department && oldUser.department?.toString() !== department) {
-      if (oldUser.department) {
-        await Department.findByIdAndUpdate(oldUser.department, {
-          $pull: { users: oldUser._id },
-        });
-      }
-      await Department.findByIdAndUpdate(department, {
-        $addToSet: { users: oldUser._id },
-      });
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { name, email, role, services, department },
-      { new: true }
-    ).populate("department services");
-
-    res.json({ message: "User updated", user: updatedUser });
+    const users = await User.find().populate("services department");
+    res.json(users);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Admin: Delete User
+exports.createUser = async (req, res) => {
+  try {
+    const { name, email, password, role, services, department } = req.body;
+    if (!name || !email || !password)
+      return res.status(400).json({ message: "Fill all fields" });
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: "User already exists" });
+
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role: role || "user",
+      services: services || [],
+      department: department || null,
+    });
+
+    if (department)
+      await Department.findByIdAndUpdate(department, {
+        $push: { users: user._id },
+      });
+
+    res.status(201).json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, role, services, department } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Handle department change
+    if (department && user.department?.toString() !== department) {
+      if (user.department)
+        await Department.findByIdAndUpdate(user.department, {
+          $pull: { users: user._id },
+        });
+      await Department.findByIdAndUpdate(department, {
+        $push: { users: user._id },
+      });
+    }
+
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.role = role || user.role;
+    user.services = services || user.services;
+    user.department = department || user.department;
+
+    await user.save();
+    res.json({ message: "User updated", user });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
+    const user = await User.findByIdAndDelete(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const deletedUser = await User.findByIdAndDelete(id);
-    if (!deletedUser)
-      return res.status(404).json({ message: "User not found" });
-
-    // remove user from department if assigned
-    if (deletedUser.department) {
-      await Department.findByIdAndUpdate(deletedUser.department, {
-        $pull: { users: deletedUser._id },
+    if (user.department)
+      await Department.findByIdAndUpdate(user.department, {
+        $pull: { users: user._id },
       });
-    }
 
     res.json({ message: "User deleted" });
   } catch (err) {
@@ -260,24 +275,18 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// Admin: Get All Users
-exports.getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find().populate("services").populate("department");
-    res.json(users);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// User: Get My Services
+// ------------------ User: My Services ------------------
 exports.getMyServices = async (req, res) => {
   try {
+    // If admin, send all services
+    if (req.user.role === "admin") {
+      const services = await Service.find();
+      return res.json(services);
+    }
+
+    // Normal user
     const user = await User.findById(req.user.id).populate("services");
-
     if (!user) return res.status(404).json({ message: "User not found" });
-
-    // ✅ return only the array of services
     res.json(user.services || []);
   } catch (err) {
     res.status(500).json({ message: err.message });

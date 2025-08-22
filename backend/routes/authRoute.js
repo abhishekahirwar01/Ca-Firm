@@ -1,20 +1,19 @@
 const express = require("express");
 const {
-  register,
   login,
   googleLogin,
+  verifyOtp,
   forgotPassword,
   resetPassword,
 } = require("../controllers/authController");
-const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Public routes
-router.post("/register", register);
-router.post("/login", login);
-router.post("/google-login", googleLogin);
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password/:token", resetPassword);
+// ---------------- Public Routes ----------------
+router.post("/login", login); // Email + Password → sends OTP
+router.post("/google-login", googleLogin); // Google login → sends OTP
+router.post("/verify-otp", verifyOtp); // Verify OTP for login
+router.post("/forgot-password", forgotPassword); // Request password reset
+router.post("/reset-password/:token", resetPassword); // Reset password using token
 
 module.exports = router;
