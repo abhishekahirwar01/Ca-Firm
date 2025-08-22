@@ -4,7 +4,7 @@ const {
   createUser,
   updateUser,
   deleteUser,
-  getuser,
+  getMyServices,
 } = require("../controllers/authController");
 const {
   authMiddleware,
@@ -17,6 +17,6 @@ router.get("/", authMiddleware, adminMiddleware, getAllUsers);
 router.post("/", authMiddleware, adminMiddleware, createUser);
 router.put("/:id", authMiddleware, adminMiddleware, updateUser);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteUser);
-router.get("/my-services", authMiddleware, getuser);
+router.get("/my-services", authMiddleware, getMyServices);
 
 module.exports = router;
