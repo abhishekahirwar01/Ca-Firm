@@ -5,10 +5,13 @@ import { motion } from "framer-motion";
 import API from "../services/api"; // your API instance
 import { auth, provider } from "../firebase"; // Firebase config
 import { signInWithPopup } from "firebase/auth";
+import OtpVerification from "../components/OtpVerification"; // OTP component
 import "./Login.css"; // External CSS
 
 export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -21,14 +24,9 @@ export default function Login() {
     try {
       const res = await API.post("/auth/login", formData);
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      if (res.data.user.role === "admin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/user/dashboard");
-      }
+      // Backend only sends OTP first
+      setOtpSent(true);
+      setOtpEmail(res.data.email);
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     }
@@ -45,18 +43,30 @@ export default function Login() {
         email: user.email,
       });
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      if (res.data.user.role === "admin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/user/dashboard");
-      }
+      // OTP flow for Google login
+      setOtpSent(true);
+      setOtpEmail(res.data.email);
     } catch (err) {
       alert("Google login failed");
     }
   };
+
+  // Called after OTP is successfully verified
+  const handleOtpSuccess = (token, user) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    if (user.role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/user/dashboard");
+    }
+  };
+
+  // Show OTP verification if OTP sent
+  if (otpSent) {
+    return <OtpVerification email={otpEmail} onSuccess={handleOtpSuccess} />;
+  }
 
   return (
     <div className="login-container">
@@ -117,13 +127,6 @@ export default function Login() {
             Continue with Google
           </motion.button>
         </form>
-
-        <div className="login-footer">
-          <p>Don’t have an account?</p>
-          <Link to="/register" className="login-link">
-            Sign Up
-          </Link>
-        </div>
       </motion.div>
     </div>
   );
